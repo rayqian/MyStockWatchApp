@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.text.InputType;
+import android.text.InputFilter;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,8 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView recyclerView;
     private StockAdapter myAdapter;
     private final List<Stock> stockList = new ArrayList<>();
+    private final List<Stock> searchResult = new ArrayList<>();
+
 
     private static final String TAG = "from MainActivity";
 
@@ -31,9 +34,10 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //add dummy data
-        Stock a = new Stock("AMZ", "YAMAXUN", 100.00, 0.01);
-        Stock b = new Stock("GOOGLE", "GUGE", 1500.00, 0.15);
+
+        // load the data - add dummy data
+        Stock a = new Stock("AMZ", "YAMAXUN");
+        Stock b = new Stock("GOOGLE", "GUGE");
         stockList.add(a);
         stockList.add(b);
 
@@ -77,15 +81,17 @@ public class MainActivity extends AppCompatActivity
 
         // Create an EditText and set it to be the builder's view
         final EditText et = new EditText(this);
-        et.setInputType(InputType.TYPE_CLASS_TEXT);
+        et.setFilters(new InputFilter[] {new InputFilter.AllCaps()});//only allow CAPITAL letters
         et.setGravity(Gravity.CENTER_HORIZONTAL);
         builder.setView(et);
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                handleSearchStock();//handle search stock here
+                String user_input = et.getText().toString();
+                handleStockSearch(user_input);
             }
         });
+
         builder.setNegativeButton("CANCLE", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
@@ -100,23 +106,50 @@ public class MainActivity extends AppCompatActivity
         dialog.show();
     }
 
-    public void handleSearchStock(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        //dummy data
-        final CharSequence[] sArray = new CharSequence[20];
-        for (int i = 0; i < 20; i++)
-            sArray[i] = "Choice " + i;
+    public void handleStockSearch(String input){
+        //create new thread to handle search stock
+        SearchStockRunnable sr = new SearchStockRunnable(this, input);
+        new Thread(sr).start();
 
+        if(input.isEmpty()){
+            return;
+        }
+    }
+
+    public void handleResultShow(){
+        Toast.makeText(this, "handle result received " + searchResult.size() + " stocks", Toast.LENGTH_SHORT).show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Make a selection");
-//        builder.setItems(sArray, new DialogInterface.OnClickListener() {
-//            public void onClick(DialogInterface dialog, int which) {
-//                tv2.setText(sArray[which]);
-//            }
-//        });
-        builder.setItems(sArray, null);
+
+        //create the String[] to display the search result to user
+        final CharSequence[] sArray = new CharSequence[searchResult.size()];
+        for (int i = 0; i < searchResult.size(); i++){
+            sArray[i] = searchResult.get(i).getSymbolwithName();
+        }
+        builder.setItems(sArray, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //add the selection stock to main page
+                stockList.add(searchResult.get(which));
+            }
+        });
 
         builder.setNegativeButton("Nevermind", null);
         AlertDialog dialog = builder.create();
         dialog.show();
     }
+
+    //accept result from SearchStockRunnable
+    public void acceptResult(ArrayList<Stock> stocks){
+        searchResult.addAll(stocks);
+        Toast.makeText(this, "search result receive " + searchResult.size() + " stocks", Toast.LENGTH_SHORT).show();
+
+        handleResultShow();
+    }
+
+    public void downloadFailed() {
+        searchResult.clear();
+        //myAdapter.notifyDataSetChanged();
+    }
+
 }

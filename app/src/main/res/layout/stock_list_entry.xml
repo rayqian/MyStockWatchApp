@@ -12,7 +12,7 @@
         android:layout_height="30dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="16dp"
-        android:text="stock_symbol"
+        android:text="@string/stock_symbol"
         android:textColor="#FFFFFF"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -22,7 +22,7 @@
         android:layout_width="90dp"
         android:layout_height="30dp"
         android:layout_marginEnd="140dp"
-        android:text="price"
+        android:text="@string/price"
         android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/stock_symbol" />
@@ -32,7 +32,7 @@
         android:layout_width="90dp"
         android:layout_height="30dp"
         android:layout_marginEnd="28dp"
-        android:text="price_change"
+        android:text="@string/price_change"
         android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/price" />
@@ -42,7 +42,7 @@
         android:layout_width="123dp"
         android:layout_height="27dp"
         android:layout_marginTop="16dp"
-        android:text="company_name"
+        android:text="@string/company_name"
         android:textColor="#FFFFFF"
         app:layout_constraintStart_toStartOf="@+id/stock_symbol"
         app:layout_constraintTop_toBottomOf="@+id/stock_symbol" />

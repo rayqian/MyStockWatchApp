@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+import java.util.Locale;
 
 public class StockAdapter extends RecyclerView.Adapter<StockViewHolder> {
     private List<Stock> stockList;
@@ -37,8 +38,9 @@ public class StockAdapter extends RecyclerView.Adapter<StockViewHolder> {
         Stock stock = stockList.get(position);
         holder.stock_symbol.setText(stock.getStockSymbol());
         holder.company_name.setText(stock.getCompanyName());
-        holder.price.setText(stock.getPrice().toString());
-        holder.price_change.setText(stock.getPriceChange().toString());
+        holder.price.setText(String.format("Price is: %s", stock.getPrice()));
+        holder.price_change.setText(String.format("Price change is: %s",
+                String.format(Locale.getDefault(), "%,d", stock.getPriceChange())));
     }
 
     @Override

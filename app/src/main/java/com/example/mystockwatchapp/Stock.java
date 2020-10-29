@@ -8,11 +8,11 @@ public class Stock implements Serializable {
     private Double price;
     private Double price_change;
 
-    Stock(String stock_symbol, String company_name, Double price, Double price_change){
+    Stock(String stock_symbol, String company_name){
         this.stock_symbol = stock_symbol;
         this.company_name = company_name;
-        this.price = price;
-        this.price_change = price_change;
+//        this.price = price;
+//        this.price_change = price_change;
     }
 
     String getStockSymbol(){
@@ -24,7 +24,17 @@ public class Stock implements Serializable {
     Double getPrice(){
         return this.price;
     }
+    void setPrice(Double price){
+        this.price = price;
+    }
     Double getPriceChange(){
         return this.price_change;
+    }
+    void setPriceChange(Double price){
+        this.price_change = price;
+    }
+
+    String getSymbolwithName(){
+        return this.stock_symbol + " - " + this.company_name;
     }
 }

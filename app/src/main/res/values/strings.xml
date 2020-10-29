@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">MyStockWatchApp</string>
     <string name="add">add</string>
+    <string name="stock_symbol">stock_symbol</string>
+    <string name="company_name">company_name</string>
+    <string name="price_change">price_change</string>
+    <string name="price">price</string>
 </resources>
