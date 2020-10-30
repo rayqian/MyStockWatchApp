@@ -5,9 +5,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputFilter;
+import android.util.JsonWriter;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,8 +19,16 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity
@@ -35,27 +47,69 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // load the data - add dummy data
-        Stock a = new Stock("AMZ", "YAMAXUN");
-        Stock b = new Stock("GOOGLE", "GUGE");
-        stockList.add(a);
-        stockList.add(b);
-
         recyclerView = findViewById(R.id.recycler);
         myAdapter = new StockAdapter(stockList, this);
         recyclerView.setAdapter(myAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        // load the data - add dummy data
+//        Stock a = new Stock("AMZ", "YAMAXUN");
+//        Stock b = new Stock("GOOGLE", "GUGE");
+//        stockList.add(a);
+//        stockList.add(b);
+
+        stockList.clear();
+        //reading json file in onCreate
+        readJSONData();
+    }
+
+    //saving data to json happens in onPause
+    @Override
+    public void onPause() {
+        writeJSONData();
+        super.onPause();
     }
 
     @Override
     public void onClick(View view) {
+        int pos = recyclerView.getChildLayoutPosition(view);
+        Stock stock = stockList.get(pos);
 
+        //open the stock url
+//        Intent intent = new Intent(this, EditNoteActivity.class);
+//        intent.putExtra("EDIT", note);
+//        intent.putExtra("INDEX", pos);
+//
+//        startActivityForResult(intent, 2);
     }
 
     @Override
     public boolean onLongClick(View view) {
-        return false;
+        int pos = recyclerView.getChildLayoutPosition(view);
+        final Stock s = stockList.get(pos);
+        //show dialog to delete the note
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Delete Stock");
+        builder.setMessage("Delete Stock Symbol " + s.getStockSymbol() +"?");
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                deleteStock(s);
+            }
+        });
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                //do nothing
+            }
+        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        Toast.makeText(this, "Bye, Thanks for using my app!", Toast.LENGTH_SHORT).show();
+        super.onBackPressed();
     }
 
     @Override
@@ -131,6 +185,7 @@ public class MainActivity extends AppCompatActivity
             public void onClick(DialogInterface dialog, int which) {
                 //add the selection stock to main page
                 stockList.add(searchResult.get(which));
+                myAdapter.notifyDataSetChanged();
             }
         });
 
@@ -150,6 +205,69 @@ public class MainActivity extends AppCompatActivity
     public void downloadFailed() {
         searchResult.clear();
         //myAdapter.notifyDataSetChanged();
+    }
+
+    private void writeJSONData() {
+        try {
+            FileOutputStream fos = getApplicationContext().
+                    openFileOutput("StocksFile.json", Context.MODE_PRIVATE);
+
+            JsonWriter writer = new JsonWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8));
+            writer.setIndent("  ");
+            writer.beginArray();//create json array by adding a bracket [ in the beginning of json file
+
+            //Collections.sort(stockList);
+
+            for (Stock n : stockList) {
+                writer.beginObject();//create json object by adding {
+                writer.name("symbol").value(n.getStockSymbol());
+                writer.name("name").value(n.getCompanyName());
+                writer.endObject();//ending json object by adding }
+            }
+            writer.endArray();//adding a close bracket ] to the end of the file
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "writeJSONData: " + e.getMessage());
+        }
+    }
+    private void readJSONData() {
+        try {
+            FileInputStream fis = getApplicationContext().
+                    openFileInput("StocksFile.json");
+
+            // Read string content from file
+            byte[] data = new byte[(int) fis.available()]; // this technique is good for small files
+            int loaded = fis.read(data);
+            Log.d(TAG, "readJSONData: Loaded " + loaded + " bytes");
+            fis.close();
+            String json = new String(data);
+
+            // Create JSON Array from string file content
+            JSONArray stockArr = new JSONArray(json);
+            for (int i = 0; i < stockArr.length(); i++) {
+                JSONObject nObj = stockArr.getJSONObject(i);
+
+                // Access note data fields
+                String symbol = nObj.getString("symbol");
+                String name = nObj.getString("name");
+
+                // Create Note and add to ArrayList
+                Stock n = new Stock(symbol, name);
+                stockList.add(n);
+            }
+            //Collections.sort(noteList);
+            Log.d(TAG, "readJSONData: " + stockList);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "readJSONData: " + e.getMessage());
+        }
+    }
+
+    public void deleteStock(Stock n){
+        stockList.remove(n);
+        myAdapter.notifyDataSetChanged();
     }
 
 }
