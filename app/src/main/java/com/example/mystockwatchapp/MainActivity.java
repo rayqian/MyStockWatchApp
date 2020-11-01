@@ -4,18 +4,21 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputFilter;
+import android.text.InputType;
 import android.util.JsonWriter;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -32,12 +35,13 @@ import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity
-        implements View.OnClickListener, View.OnLongClickListener{
+        implements View.OnClickListener, View.OnLongClickListener, SwipeRefreshLayout.OnRefreshListener{
 
     private RecyclerView recyclerView;
     private StockAdapter myAdapter;
     private final List<Stock> stockList = new ArrayList<>();
     private final List<Stock> searchResult = new ArrayList<>();
+    private SwipeRefreshLayout swiper;
 
 
     private static final String TAG = "from MainActivity";
@@ -52,6 +56,8 @@ public class MainActivity extends AppCompatActivity
         recyclerView.setAdapter(myAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        swiper = findViewById(R.id.swiper);
+        swiper.setOnRefreshListener(this);//call the override onRefresh() method
         // load the data - add dummy data
 //        Stock a = new Stock("AMZ", "YAMAXUN");
 //        Stock b = new Stock("GOOGLE", "GUGE");
@@ -101,6 +107,7 @@ public class MainActivity extends AppCompatActivity
                 //do nothing
             }
         });
+        builder.setIcon(R.drawable.baseline_delete_outline_black_36);
         AlertDialog dialog = builder.create();
         dialog.show();
         return true;
@@ -129,14 +136,25 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onRefresh() {
+        updatePrice();
+    }
+
+    public void updatePrice(){
+        new Thread(new UpdatePriceRunnable(this, stockList)).start();
+    }
+
     public void handleAddStockClick(){
         // Single input value dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         // Create an EditText and set it to be the builder's view
         final EditText et = new EditText(this);
-        et.setFilters(new InputFilter[] {new InputFilter.AllCaps()});//only allow CAPITAL letters
+        et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);//only allow CAPITAL letters
+        et.setMaxLines(1);
         et.setGravity(Gravity.CENTER_HORIZONTAL);
+
         builder.setView(et);
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
@@ -185,6 +203,7 @@ public class MainActivity extends AppCompatActivity
             public void onClick(DialogInterface dialog, int which) {
                 //add the selection stock to main page
                 stockList.add(searchResult.get(which));
+                updatePrice();
                 myAdapter.notifyDataSetChanged();
             }
         });
@@ -196,9 +215,12 @@ public class MainActivity extends AppCompatActivity
 
     //accept result from SearchStockRunnable
     public void acceptResult(ArrayList<Stock> stocks){
+        searchResult.clear();
+        //if no matching result
+        //if only one matching result
+        //if multiple matching results
         searchResult.addAll(stocks);
         Toast.makeText(this, "search result receive " + searchResult.size() + " stocks", Toast.LENGTH_SHORT).show();
-
         handleResultShow();
     }
 
@@ -222,6 +244,9 @@ public class MainActivity extends AppCompatActivity
                 writer.beginObject();//create json object by adding {
                 writer.name("symbol").value(n.getStockSymbol());
                 writer.name("name").value(n.getCompanyName());
+                writer.name("price").value(n.getPrice());
+                writer.name("price_change").value(n.getPriceChange());
+                writer.name("price_change_p").value(n.getPriceChangePercent());
                 writer.endObject();//ending json object by adding }
             }
             writer.endArray();//adding a close bracket ] to the end of the file
@@ -251,9 +276,15 @@ public class MainActivity extends AppCompatActivity
                 // Access note data fields
                 String symbol = nObj.getString("symbol");
                 String name = nObj.getString("name");
+                String price = nObj.getString("price");
+                String price_change = nObj.getString("price_change");
+                String price_change_p = nObj.getString("price_change_p");
 
                 // Create Note and add to ArrayList
                 Stock n = new Stock(symbol, name);
+                n.setPrice(Double.parseDouble(price));
+                n.setPriceChange(Double.parseDouble(price_change));
+                n.setPriceChangePercent(Double.parseDouble(price_change_p));
                 stockList.add(n);
             }
             //Collections.sort(noteList);
@@ -269,5 +300,13 @@ public class MainActivity extends AppCompatActivity
         stockList.remove(n);
         myAdapter.notifyDataSetChanged();
     }
+
+    public void acceptPriceUpdate(List<Stock> stocks){
+        Toast.makeText(this, "update price receive " + stocks.size() + " stocks", Toast.LENGTH_SHORT).show();
+//        stockList.clear();
+        myAdapter.notifyDataSetChanged();
+        swiper.setRefreshing(false);
+    }
+
 
 }

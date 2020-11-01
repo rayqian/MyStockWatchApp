@@ -38,9 +38,8 @@ public class StockAdapter extends RecyclerView.Adapter<StockViewHolder> {
         Stock stock = stockList.get(position);
         holder.stock_symbol.setText(stock.getStockSymbol());
         holder.company_name.setText(stock.getCompanyName());
-        holder.price.setText(String.format("Price is: %s", stock.getPrice()));
-        holder.price_change.setText(String.format("Price change is: %s",
-                String.format(Locale.getDefault(), "%,d", stock.getPriceChange())));
+        holder.price.setText(String.format("%s", stock.getPrice()));
+        holder.price_change.setText(String.format("%s", stock.getPriceChange()));
     }
 
     @Override

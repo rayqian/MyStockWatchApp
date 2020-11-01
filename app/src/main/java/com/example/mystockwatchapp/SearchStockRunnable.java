@@ -2,10 +2,7 @@ package com.example.mystockwatchapp;
 
 import android.net.Uri;
 import android.util.Log;
-import android.view.contentcapture.DataShareWriteAdapter;
 import android.widget.Toast;
-
-import androidx.appcompat.app.AlertDialog;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -80,7 +77,7 @@ public class SearchStockRunnable implements Runnable {
             return;
         }
 
-        final ArrayList<Stock> stockList = parseJSON(s);
+        final ArrayList<Stock> stockList = parseJSON(s, keyword);
         mainActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -91,7 +88,7 @@ public class SearchStockRunnable implements Runnable {
         });
     }
 
-    private ArrayList<Stock> parseJSON(String s) {
+    private ArrayList<Stock> parseJSON(String s, String key) {
         ArrayList<Stock> stockList = new ArrayList<>();
         try {
             JSONArray jObjMain = new JSONArray(s);
@@ -99,7 +96,9 @@ public class SearchStockRunnable implements Runnable {
                 JSONObject jStock = (JSONObject) jObjMain.get(i);
                 String symbol = jStock.getString("symbol");
                 String name = jStock.getString("name");
-                stockList.add(new Stock(symbol,name));
+                if(symbol.indexOf(key) != -1 || name.indexOf(key) != -1){
+                    stockList.add(new Stock(symbol,name));
+                }
             }
             return stockList;
         } catch (Exception e) {
