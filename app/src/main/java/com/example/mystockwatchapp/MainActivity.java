@@ -179,13 +179,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void handleStockSearch(String input){
+        if(input.isEmpty()){
+            return;
+        }
+
         //create new thread to handle search stock
         SearchStockRunnable sr = new SearchStockRunnable(this, input);
         new Thread(sr).start();
 
-        if(input.isEmpty()){
-            return;
-        }
     }
 
     public void handleResultShow(){
@@ -204,7 +205,6 @@ public class MainActivity extends AppCompatActivity
                 //add the selection stock to main page
                 stockList.add(searchResult.get(which));
                 updatePrice();
-                myAdapter.notifyDataSetChanged();
             }
         });
 

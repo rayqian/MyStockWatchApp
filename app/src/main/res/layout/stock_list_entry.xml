@@ -13,23 +13,23 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="16dp"
         android:text="@string/stock_symbol"
-        android:textColor="#FFFFFF"
+        android:textColor="#FAF8F8"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/price"
-        android:layout_width="90dp"
+        android:layout_width="65dp"
         android:layout_height="30dp"
-        android:layout_marginEnd="140dp"
+        android:layout_marginEnd="8dp"
         android:text="@string/price"
         android:textColor="#FFFFFF"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/price_change"
         app:layout_constraintTop_toTopOf="@+id/stock_symbol" />
 
     <TextView
         android:id="@+id/price_change"
-        android:layout_width="90dp"
+        android:layout_width="110dp"
         android:layout_height="30dp"
         android:layout_marginEnd="28dp"
         android:text="@string/price_change"
@@ -41,7 +41,7 @@
         android:id="@+id/company_name"
         android:layout_width="157dp"
         android:layout_height="49dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:text="@string/company_name"
         android:textColor="#FFFFFF"
         app:layout_constraintStart_toStartOf="@+id/stock_symbol"
