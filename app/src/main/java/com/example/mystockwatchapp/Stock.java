@@ -12,8 +12,6 @@ public class Stock implements Serializable {
     Stock(String stock_symbol, String company_name){
         this.stock_symbol = stock_symbol;
         this.company_name = company_name;
-//        this.price = price;
-//        this.price_change = price_change;
     }
 
     String getStockSymbol(){

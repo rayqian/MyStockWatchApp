@@ -55,12 +55,9 @@ public class SearchStockRunnable implements Runnable {
             }
 
             Log.d(TAG, "run: " + sb.toString());
-            }
-        catch (MalformedURLException e) {
-            e.printStackTrace();
             } catch (IOException e) {
-            e.printStackTrace();
-        }
+                e.printStackTrace();
+                }
 
         handleResults(sb.toString());
     }
@@ -82,7 +79,6 @@ public class SearchStockRunnable implements Runnable {
             @Override
             public void run() {
                 if (stockList != null)
-//                    Toast.makeText(mainActivity, "Loaded " + stockList.size() + " stocks.", Toast.LENGTH_LONG).show();
                 mainActivity.acceptResult(stockList);
             }
         });

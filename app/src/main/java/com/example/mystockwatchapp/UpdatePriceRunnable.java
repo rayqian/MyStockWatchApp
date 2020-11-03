@@ -1,5 +1,6 @@
 package com.example.mystockwatchapp;
 
+import android.media.audiofx.DynamicsProcessing;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
@@ -107,13 +108,32 @@ public class UpdatePriceRunnable implements Runnable{
                 String price = jStock.getString("latestPrice");
                 String change = jStock.getString("change");
                 String changeP = jStock.getString("changePercent");
-                s.setPrice(Double.parseDouble(price));
-                s.setPriceChange(Double.parseDouble(change));
-                s.setPriceChangePercent(Double.parseDouble(changeP));
+                if(!price.equals("null")){
+                    Log.d(TAG, "price is " + price);
+                    s.setPrice(Double.parseDouble(price));
                 }
+                else{
+                    s.setPrice(0.00);
+                }
+                if(!change.equals("null")){
+                    Log.d(TAG, "change is " + change);
+                    s.setPriceChange(Double.parseDouble(change));
+                }
+                else{
+                    s.setPriceChange(0.00);
+                }
+                if(!changeP.equals("null")){
+                    Log.d(TAG, "change price is " + changeP);
+                    s.setPriceChangePercent(Double.parseDouble(changeP));
+                }
+                else{
+                    s.setPriceChangePercent(0.00);
+                }
+            }
             catch (JSONException e) {
                 e.printStackTrace();
             }
+
         }
         return stocks;
     }

@@ -244,12 +244,10 @@ public class MainActivity extends AppCompatActivity
         else if(stocks.size() == 1){
             validateAdd(stocks.get(0));
             updatePrice();
-            //Toast.makeText(this, "your stock is added to the list.", Toast.LENGTH_SHORT).show();
         }
         //if multiple matching results
         else{
             searchResult.addAll(stocks);
-            //Toast.makeText(this, "search result receive " + searchResult.size() + " stocks", Toast.LENGTH_SHORT).show();
             handleResultShow();
         }
 
@@ -331,7 +329,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void acceptPriceUpdate(List<Stock> stocks){
-        //Toast.makeText(this, "update price receive " + stocks.size() + " stocks", Toast.LENGTH_SHORT).show();
+        writeJSONData();
         myAdapter.notifyDataSetChanged();
         swiper.setRefreshing(false);
     }
@@ -361,7 +359,6 @@ public class MainActivity extends AppCompatActivity
                 }
             });
 
-//            Toast.makeText( this, "write json data", Toast.LENGTH_SHORT).show();
             writeJSONData();
             myAdapter.notifyDataSetChanged();
         }
