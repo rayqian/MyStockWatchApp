@@ -82,7 +82,7 @@ public class SearchStockRunnable implements Runnable {
             @Override
             public void run() {
                 if (stockList != null)
-                    Toast.makeText(mainActivity, "Loaded " + stockList.size() + " stocks.", Toast.LENGTH_LONG).show();
+//                    Toast.makeText(mainActivity, "Loaded " + stockList.size() + " stocks.", Toast.LENGTH_LONG).show();
                 mainActivity.acceptResult(stockList);
             }
         });

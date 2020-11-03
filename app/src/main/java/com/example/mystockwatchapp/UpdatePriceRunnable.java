@@ -93,7 +93,7 @@ public class UpdatePriceRunnable implements Runnable{
             @Override
             public void run() {
                 if (updated_stocks != null)
-                    Toast.makeText(mainActivity, " updating " + updated_stocks.size() + " stocks.", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(mainActivity, " updating " + updated_stocks.size() + " stocks.", Toast.LENGTH_SHORT).show();
                 mainActivity.acceptPriceUpdate(updated_stocks);
             }
         });

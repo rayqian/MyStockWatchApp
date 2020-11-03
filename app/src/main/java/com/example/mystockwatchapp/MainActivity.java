@@ -21,7 +21,6 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -31,10 +30,10 @@ import org.json.JSONObject;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -85,13 +84,6 @@ public class MainActivity extends AppCompatActivity
         Intent i = new Intent(Intent.ACTION_VIEW);
         i.setData(Uri.parse(url));
         startActivity(i);
-
-        //open the stock url
-//        Intent intent = new Intent(this, EditNoteActivity.class);
-//        intent.putExtra("EDIT", note);
-//        intent.putExtra("INDEX", pos);
-//
-//        startActivityForResult(intent, 2);
     }
 
     @Override
@@ -212,7 +204,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void handleResultShow(){
-        Toast.makeText(this, "handle result received " + searchResult.size() + " stocks", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(this, "handle result received " + searchResult.size() + " stocks", Toast.LENGTH_SHORT).show();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Make a selection");
@@ -227,7 +219,6 @@ public class MainActivity extends AppCompatActivity
                 public void onClick(DialogInterface dialog, int which) {
                     //add the selection stock to main page
                     validateAdd(searchResult.get(which));
-                    writeJSONData();
                     updatePrice();
                 }
             });
@@ -253,12 +244,12 @@ public class MainActivity extends AppCompatActivity
         else if(stocks.size() == 1){
             validateAdd(stocks.get(0));
             updatePrice();
-            Toast.makeText(this, "your stock is added to the list.", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "your stock is added to the list.", Toast.LENGTH_SHORT).show();
         }
         //if multiple matching results
         else{
             searchResult.addAll(stocks);
-            Toast.makeText(this, "search result receive " + searchResult.size() + " stocks", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "search result receive " + searchResult.size() + " stocks", Toast.LENGTH_SHORT).show();
             handleResultShow();
         }
 
@@ -266,7 +257,6 @@ public class MainActivity extends AppCompatActivity
 
     public void downloadFailed() {
         searchResult.clear();
-        //myAdapter.notifyDataSetChanged();
     }
 
     private void writeJSONData() {
@@ -341,7 +331,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void acceptPriceUpdate(List<Stock> stocks){
-        Toast.makeText(this, "update price receive " + stocks.size() + " stocks", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "update price receive " + stocks.size() + " stocks", Toast.LENGTH_SHORT).show();
         myAdapter.notifyDataSetChanged();
         swiper.setRefreshing(false);
     }
@@ -363,6 +353,17 @@ public class MainActivity extends AppCompatActivity
         }
         else{
             stockList.add(s);
+            //keep the list in alphabetical order
+            Collections.sort(stockList, new Comparator<Stock>() {
+                @Override
+                public int compare(Stock t1, Stock t2) {
+                    return t1.getStockSymbol().compareTo(t2.getStockSymbol());
+                }
+            });
+
+//            Toast.makeText( this, "write json data", Toast.LENGTH_SHORT).show();
+            writeJSONData();
+            myAdapter.notifyDataSetChanged();
         }
     }
 
