@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -40,27 +41,35 @@ public class StockAdapter extends RecyclerView.Adapter<StockViewHolder> {
 
         holder.stock_symbol.setText(stock.getStockSymbol());
         holder.company_name.setText(stock.getCompanyName());
-        holder.price.setText(String.format("%s", stock.getPrice()));
-        //holder.price_change.setText(String.format("%s(%.2f%%)", stock.getPriceChange(), stock.getPriceChangePercent()));
+        if(stock.getPrice() != null  && stock.getPriceChange() != null && stock.getPriceChangePercent() != null){
+            holder.price.setText(String.format("%s", stock.getPrice()));
+            if(stock.getPriceChange() >= 0){
+                int color = Color.GREEN;
+                char up = '\u25B2';
+                holder.stock_symbol.setTextColor(color);
+                holder.company_name.setTextColor(color);
+                holder.price.setTextColor(color);
+                holder.price_change.setTextColor(color);
+                holder.price_change.setText(String.format("%s %s(%.2f%%)", up, stock.getPriceChange(), stock.getPriceChangePercent()));
+            }
+            else{
+                int color = Color.RED;
+                char down = '\u25BC';
+                holder.stock_symbol.setTextColor(color);
+                holder.company_name.setTextColor(color);
+                holder.price.setTextColor(color);
+                holder.price_change.setTextColor(color);
+                holder.price_change.setText(String.format("%s %s(%.2f%%)", down, stock.getPriceChange(), stock.getPriceChangePercent()));
+            }
+        }
 
-        if(stock.getPriceChange() >= 0 ){
-            int color = Color.GREEN;
-            char up = '\u25B2';
-            holder.stock_symbol.setTextColor(color);
-            holder.company_name.setTextColor(color);
-            holder.price.setTextColor(color);
-            holder.price_change.setTextColor(color);
-            holder.price_change.setText(String.format("%s %s(%.2f%%)", up, stock.getPriceChange(), stock.getPriceChangePercent()));
-        }
         else{
-            int color = Color.RED;
-            char down = '\u25BC';
-            holder.stock_symbol.setTextColor(color);
-            holder.company_name.setTextColor(color);
-            holder.price.setTextColor(color);
-            holder.price_change.setTextColor(color);
-            holder.price_change.setText(String.format("%s %s(%.2f%%)", down, stock.getPriceChange(), stock.getPriceChangePercent()));
+            holder.price.setText("0.0");
+            holder.price_change.setText("0.0");
         }
+
+
+
 
     }
 

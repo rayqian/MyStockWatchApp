@@ -9,6 +9,9 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputFilter;
 import android.text.InputType;
@@ -32,7 +35,9 @@ import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity
         implements View.OnClickListener, View.OnLongClickListener, SwipeRefreshLayout.OnRefreshListener{
@@ -58,11 +63,6 @@ public class MainActivity extends AppCompatActivity
 
         swiper = findViewById(R.id.swiper);
         swiper.setOnRefreshListener(this);//call the override onRefresh() method
-        // load the data - add dummy data
-//        Stock a = new Stock("AMZ", "YAMAXUN");
-//        Stock b = new Stock("GOOGLE", "GUGE");
-//        stockList.add(a);
-//        stockList.add(b);
 
         stockList.clear();
         //reading json file in onCreate
@@ -80,6 +80,11 @@ public class MainActivity extends AppCompatActivity
     public void onClick(View view) {
         int pos = recyclerView.getChildLayoutPosition(view);
         Stock stock = stockList.get(pos);
+        String pre_url = "http://www.marketwatch.com/investing/stock/";
+        String url = pre_url + stock.getStockSymbol();
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
 
         //open the stock url
 //        Intent intent = new Intent(this, EditNoteActivity.class);
@@ -138,6 +143,15 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRefresh() {
+        if(!isNetworkAvailable()){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Stocks cannot be updated without a network connection.");
+            builder.setTitle("No Network Connection");
+            AlertDialog dialog = builder.create();
+            dialog.show();
+            swiper.setRefreshing(false);
+            return;
+        }
         updatePrice();
     }
 
@@ -146,28 +160,36 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void handleAddStockClick(){
+        if(!isNetworkAvailable()){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Stocks cannot be added without a network connection.");
+            builder.setTitle("No Network Connection");
+            AlertDialog dialog = builder.create();
+            dialog.show();
+            return;
+        }
         // Single input value dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         // Create an EditText and set it to be the builder's view
         final EditText et = new EditText(this);
-        et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);//only allow CAPITAL letters
-        et.setMaxLines(1);
+        et.setFilters(new InputFilter[] {new InputFilter.AllCaps()});
+        et.setInputType(InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE| InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);//only allow CAPITAL letters
         et.setGravity(Gravity.CENTER_HORIZONTAL);
 
         builder.setView(et);
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                String user_input = et.getText().toString();
-                handleStockSearch(user_input);
-            }
-        });
 
         builder.setNegativeButton("CANCLE", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.dismiss();
+            }
+        });
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                String user_input = et.getText().toString();
+                handleStockSearch(user_input);
             }
         });
 
@@ -191,6 +213,7 @@ public class MainActivity extends AppCompatActivity
 
     public void handleResultShow(){
         Toast.makeText(this, "handle result received " + searchResult.size() + " stocks", Toast.LENGTH_SHORT).show();
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Make a selection");
 
@@ -200,28 +223,45 @@ public class MainActivity extends AppCompatActivity
             sArray[i] = searchResult.get(i).getSymbolwithName();
         }
         builder.setItems(sArray, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                //add the selection stock to main page
-                stockList.add(searchResult.get(which));
-                updatePrice();
-            }
-        });
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    //add the selection stock to main page
+                    validateAdd(searchResult.get(which));
+                    writeJSONData();
+                    updatePrice();
+                }
+            });
 
         builder.setNegativeButton("Nevermind", null);
         AlertDialog dialog = builder.create();
         dialog.show();
+
     }
 
     //accept result from SearchStockRunnable
     public void acceptResult(ArrayList<Stock> stocks){
         searchResult.clear();
         //if no matching result
-        //if only one matching result
+        if(stocks.size() == 0){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Data for stock symbol not found.");
+            builder.setTitle("Symbol Not Found");
+            AlertDialog dialog = builder.create();
+            dialog.show();
+        }
+        //if only one matching result, add it to stock list directly
+        else if(stocks.size() == 1){
+            validateAdd(stocks.get(0));
+            updatePrice();
+            Toast.makeText(this, "your stock is added to the list.", Toast.LENGTH_SHORT).show();
+        }
         //if multiple matching results
-        searchResult.addAll(stocks);
-        Toast.makeText(this, "search result receive " + searchResult.size() + " stocks", Toast.LENGTH_SHORT).show();
-        handleResultShow();
+        else{
+            searchResult.addAll(stocks);
+            Toast.makeText(this, "search result receive " + searchResult.size() + " stocks", Toast.LENGTH_SHORT).show();
+            handleResultShow();
+        }
+
     }
 
     public void downloadFailed() {
@@ -237,8 +277,6 @@ public class MainActivity extends AppCompatActivity
             JsonWriter writer = new JsonWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8));
             writer.setIndent("  ");
             writer.beginArray();//create json array by adding a bracket [ in the beginning of json file
-
-            //Collections.sort(stockList);
 
             for (Stock n : stockList) {
                 writer.beginObject();//create json object by adding {
@@ -298,15 +336,50 @@ public class MainActivity extends AppCompatActivity
 
     public void deleteStock(Stock n){
         stockList.remove(n);
+        writeJSONData();
         myAdapter.notifyDataSetChanged();
     }
 
     public void acceptPriceUpdate(List<Stock> stocks){
         Toast.makeText(this, "update price receive " + stocks.size() + " stocks", Toast.LENGTH_SHORT).show();
-//        stockList.clear();
         myAdapter.notifyDataSetChanged();
         swiper.setRefreshing(false);
     }
 
+
+    public void validateAdd(Stock s){
+        //validate if the stock is duplicate, otherwise add it to the global list
+        Set<String> stock_symbols_set = new HashSet<>();
+        for(Stock stock: stockList){
+            stock_symbols_set.add(stock.getStockSymbol());
+        }
+        if(stock_symbols_set.contains(s.getStockSymbol())){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setIcon(R.drawable.baseline_warning_black_36);
+            builder.setMessage("Stock Symbol " + s.getStockSymbol() + " is already displayed. ");
+            builder.setTitle("Duplicate Stock");
+            AlertDialog dialog = builder.create();
+            dialog.show();
+        }
+        else{
+            stockList.add(s);
+        }
+    }
+
+    private boolean isNetworkAvailable(){
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null) {
+            Toast.makeText(this, "No ConnectivityManager", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        //get the network info
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+
+        if (netInfo != null && netInfo.isConnected()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
 }
